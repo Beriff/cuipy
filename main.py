@@ -135,7 +135,7 @@ class Text:
 class TextBox:
 
 
-    def __init__(self, size_x: int, size_y: int, label=False, text='Lorem impsum dolor sit amet', word_wrap=True):
+    def __init__(self, size_x: int, size_y: int, label=False, text='This is a dummy text. Lorem ipsum dolor sit amet.', word_wrap=True):
         self.size_x = size_x
         self.size_y = size_y
         self.label = label
@@ -158,16 +158,22 @@ class TextBox:
             layer.grid[origin_y][i + origin_x + 1] = CUIPY_COLOR.BG_WHITE + CUIPY_COLOR.BLACK + self.label[i] + CUIPY_COLOR._RESET
 
         for i in range(0, len(text_split)):
-            for k in text_split[i]:
-                if index_x <= origin_x + self.size_x:
-                    layer.grid[index_y][index_x] = k
+            flag = False
+            for k in range(0, len(text_split[i])):
+                if index_x <= origin_x + self.size_x - 1:
+                    if flag:
+                        flag = False
+                        layer.grid[index_y][index_x-1] = text_split[i][k-1]
+                    layer.grid[index_y][index_x] = text_split[i][k]
                     index_x += 1
                 else:
-                    if index_y < origin_y + self.size_y:
+                    if index_y <= origin_y + self.size_y:
                         index_y += 1
-                        index_x = origin_x + 1
+                        index_x = origin_x + 2
+                        flag = True
                     else:
                         return False
+            index_x += 1
 
 class ProgressBar:
     
@@ -192,7 +198,7 @@ class ProgressBar:
         progressRect.fill_area(layer)
 
         for i in range(0, len(str(self.val) + '%')):
-            layer.grid[origin_y + (round(self.size_y / 2))][round(self.size_x / 2) + i] = (str(self.val) + '%')[i]
+            layer.grid[origin_y + (round(self.size_y / 2))][origin_x - 1 + round(self.size_x / 2) + i] = (str(self.val) + '%')[i]
         for i in range(0, len(self.label)):
             layer.grid[origin_y][i + origin_x + 1] = CUIPY_COLOR.BG_WHITE + CUIPY_COLOR.BLACK + self.label[i] + CUIPY_COLOR._RESET
 
@@ -223,11 +229,11 @@ class BarChart:
 
         for val in bar_value_array:
             label = Text(str(val))
-            new_bar = Rectangle(origin_x + bar_pivot_x_index + 2, self.size_y - (round(val * step) - 3), 3, self.size_y - (self.size_y - (round(val * step) - 3)))
+            new_bar = Rectangle(origin_x + bar_pivot_x_index + 2, origin_y - 1 + (self.size_y - (round(val * step) - 3)), 3, self.size_y - (self.size_y - (round(val * step) - 3)))
             bar_array.append(new_bar)
             bar_pivot_x_index += 4
 
-            label.print_text(origin_x + (bar_pivot_x_index - (len(label.text) - 1)), self.size_y, layer)
+            label.print_text(origin_x + (bar_pivot_x_index - (len(label.text) - 1)), origin_y - 1 + self.size_y, layer)
 
         for bar in bar_array:
             bar.fill_area(layer)
@@ -262,8 +268,8 @@ class Root:
             target.size_x = self.cell_size_x - 1
             target.size_y = self.cell_size_y - 1
         else:
-            target.size_x = (self.cell_size_x - 1) * target.stretch_factor_x
-            target.size_y = (self.cell_size_y - 1) * target.stretch_factor_y
+            target.size_x = (self.cell_size_x) * target.stretch_factor_x
+            target.size_y = (self.cell_size_y) * target.stretch_factor_y
 
         if not (cell_index_x or cell_index_y):
             cell_index_x = target.binded_coords[0]
@@ -298,10 +304,14 @@ class Root:
         master_layer.draw()
 
 root = Root()
-root.generate_grid(40, 20)
-text = BarChart(40, 20, {'te': 1, 'te2': 2, 'te3': 3}, 'Bruh')
+root.generate_grid(20, 10)
+barchart = BarChart(20, 10, {'te': 2, 'te2': 3, 'te3': 4}, 'I am barchart!')
+textbox = TextBox(20, 10, 'I am textbox!', 'Widgets can be stretched to occupy several cells.')
+pg_bar = ProgressBar(20, 10, 45, 'I am progress bar!')
 
-root.bind_widget(text, 0, 0)
+root.bind_widget_stretched(textbox, 0, 1, 2, 1)
+root.bind_widget(barchart, 0, 0)
+root.bind_widget(pg_bar, 1, 0)
 
 root.render()
 
