@@ -2,9 +2,6 @@ import os
 
 os.system('color')
 
-class BRAILLE_LINE:
-    F_SLOPE_0 = '⠤'
-
 class CUIPY_COLOR:
     _RESET = '\u001b[0m'
     RED = '\u001b[31m'
@@ -126,7 +123,7 @@ class Line:
 class TextBox:
 
 
-    def __init__(self, size_x, size_y, label=False, text='Lorem impsum dolor sit amet', word_wrap=True):
+    def __init__(self, size_x: int, size_y: int, label=False, text='Lorem impsum dolor sit amet', word_wrap=True):
         self.size_x = size_x
         self.size_y = size_y
         self.label = label
@@ -136,7 +133,7 @@ class TextBox:
         self.binded_coords = False
         self.stretch = False
 
-    def draw_for_layer(self, layer, origin_x, origin_y):
+    def draw_for_layer(self, layer: Layer, origin_x: int, origin_y: int) -> bool:
         baseRect = Rectangle(origin_x, origin_y, self.size_x, self.size_y)
         baseRect.draw_for_layer(layer)
 
@@ -162,7 +159,7 @@ class TextBox:
 
 class ProgressBar:
     
-    def __init__(self, size_x, size_y, val, label=False):
+    def __init__(self, size_x: int, size_y: int, val: int, label=False):
         self.size_x = size_x
         self.size_y = size_y
         self.label = label
@@ -171,7 +168,7 @@ class ProgressBar:
         self.binded_coords = False
         self.stretch = False
 
-    def draw_for_layer(self, layer, origin_x, origin_y):
+    def draw_for_layer(self, layer: Layer, origin_x: int, origin_y: int):
         baseRect = Rectangle(origin_x, origin_y, self.size_x, self.size_y)
         baseRect.draw_for_layer(layer)
 
@@ -186,6 +183,45 @@ class ProgressBar:
             layer.grid[origin_y + (round(self.size_y / 2))][round(self.size_x / 2) + i] = (str(self.val) + '%')[i]
         for i in range(0, len(self.label)):
             layer.grid[origin_y][i + origin_x + 1] = CUIPY_COLOR.BG_WHITE + CUIPY_COLOR.BLACK + self.label[i] + CUIPY_COLOR._RESET
+
+class BarChart:
+    
+    def __init__(self, size_x: int, size_y: int, data_pairs: dict, label=False):
+        self.size_x = size_x
+        self.size_y = size_y
+        self.label = label
+        self.data_pairs = data_pairs
+
+        self.binded_coords = False
+        self.stretch = False
+
+    def draw_for_layer(self, layer: Layer, origin_x: int, origin_y: int):
+        baseRect = Rectangle(origin_x, origin_y, self.size_x, self.size_y)
+        baseRect.draw_for_layer(layer)
+
+        bar_value_array = []
+        bar_array = []
+
+        bar_pivot_x_index = 1
+
+        for key in self.data_pairs:
+            bar_value_array.append(self.data_pairs[key])
+
+        step = self.size_y / ( max(bar_value_array) ) - 1
+
+        for val in bar_value_array:
+            new_bar = Rectangle(bar_pivot_x_index + 2, round(val / step), 3, self.size_y - round(val/step))
+            bar_array.append(new_bar)
+            bar_pivot_x_index += 4
+
+        for bar in bar_array:
+            bar.fill_area(layer)
+
+        for i in range(0, len(self.label)):
+            layer.grid[origin_y][i + origin_x + 1] = CUIPY_COLOR.BG_WHITE + CUIPY_COLOR.BLACK + self.label[i] + CUIPY_COLOR._RESET
+
+
+
 
 class Root:
     def __init__(self, res_x=100, res_y=40):
@@ -247,14 +283,14 @@ class Root:
         master_layer.draw()
 
 root = Root()
-root.generate_grid(20, 10)
-text = ProgressBar(20, 10, 92, 'Bruh')
+root.generate_grid(40, 20)
+text = BarChart(40, 20, {'te': 5, 'te2': 7}, 'Bruh')
 
-#root.bind_widget(text, 0, 0)
+root.bind_widget(text, 0, 0)
 
-#root.render()
+root.render()
 
-print(BRAILLE_LINE.F_SLOPE_0)
+
 input()
 
                 
