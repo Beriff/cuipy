@@ -1,4 +1,5 @@
 import os
+from time import sleep
 
 os.system('color')
 
@@ -94,6 +95,9 @@ class Rectangle:
             for k in range(self.x1, self.x2):
                 layer.grid[i][k] = self.symbol
 
+    def get_center(self) -> tuple:
+        return ( round((self.x2 - self.x1) / 2), round((self.y2 - self.y1) / 2) )
+
 class Line:
     def __init__(self, x1, y1, x2, y2, symbol=CUIPY_COLOR.BG_WHITE + '▓' + CUIPY_COLOR._RESET):
         self.x1 = x1
@@ -119,6 +123,14 @@ class Line:
             if error >= 1:
                 y = y + diry
                 error = error - 1.0
+
+class Text:
+    def __init__(self, text: str):
+        self.text = text
+
+    def print_text(self, pivot_x: int, pivot_y: int, layer: Layer):
+        for i in range(0, len(self.text)):
+            layer.grid[pivot_y][i + pivot_x] = self.text[i]
 
 class TextBox:
 
@@ -207,12 +219,15 @@ class BarChart:
         for key in self.data_pairs:
             bar_value_array.append(self.data_pairs[key])
 
-        step = self.size_y / ( max(bar_value_array) ) - 1
+        step = self.size_y / ( max(bar_value_array) ) #- 1
 
         for val in bar_value_array:
-            new_bar = Rectangle(bar_pivot_x_index + 2, round(val / step), 3, self.size_y - round(val/step))
+            label = Text(str(val))
+            new_bar = Rectangle(origin_x + bar_pivot_x_index + 2, self.size_y - (round(val * step) - 3), 3, self.size_y - (self.size_y - (round(val * step) - 3)))
             bar_array.append(new_bar)
             bar_pivot_x_index += 4
+
+            label.print_text(origin_x + (bar_pivot_x_index - (len(label.text) - 1)), self.size_y, layer)
 
         for bar in bar_array:
             bar.fill_area(layer)
@@ -284,12 +299,11 @@ class Root:
 
 root = Root()
 root.generate_grid(40, 20)
-text = BarChart(40, 20, {'te': 5, 'te2': 7}, 'Bruh')
+text = BarChart(40, 20, {'te': 1, 'te2': 2, 'te3': 3}, 'Bruh')
 
 root.bind_widget(text, 0, 0)
 
 root.render()
-
 
 input()
 
